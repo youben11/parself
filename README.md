@@ -1,2 +1,2 @@
 # parself
-Another yet elf parser
+Yet another elf parser
