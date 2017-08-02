@@ -1,2 +1,2 @@
 # parself
-Another yet elf parser, designed for learning purposes
+Another yet elf parser
