@@ -241,29 +241,36 @@ void print_ehdr32(Elf32_Ehdr hdr){
 }
 
 /*
- * This is the main function that will parse
- * and print each item of the Elf32
+ * This is the main function that will map the  
+ * ELF32 into memory, parse it and print each  
+ * component of it
  */
 void parse_elf32(Elf32_Ehdr hdr, FILE* elf){
+    
+    struct stat elf_stat;
+    if(fstat(fileno(elf), &elf_stat) < 0)
+        fatal("[-] Can't get the file size");
+    char* mem = mmap(NULL, elf_stat.st_size, PROT_READ, MAP_PRIVATE, fileno(elf), 0);
+    if(mem == MAP_FAILED)
+        fatal("[-] Can't allocate memory for the file");
+    
     print_ehdr32(hdr);
     
     if(hdr.e_phoff)
-        print_ephtbl32(hdr, elf);
+        print_ephtbl32(hdr, mem);
     if(hdr.e_shoff)
-        print_eshtbl32(hdr, elf);
+        print_eshtbl32(hdr, mem);
 }
 
 /*
  * This function prints all information contained
  * on an Elf32 program header table
  */
-void print_ephtbl32(Elf32_Ehdr hdr, FILE* elf){
+void print_ephtbl32(Elf32_Ehdr hdr, char* mem){
     //Get the program header table
     Elf32_Phdr* phdr = malloc(hdr.e_phentsize * hdr.e_phnum);
-    fseek(elf, hdr.e_phoff, SEEK_SET);
-    fread(phdr, hdr.e_phentsize, hdr.e_phnum, elf);
-    if(feof(elf))
-        fatal("[-] Unexpected EOF while parsing program header table");
+    memcpy(phdr,mem + hdr.e_phoff, hdr.e_phentsize * hdr.e_phnum);
+
     
     puts("");
     puts("==========================================Program header table==========================================");
@@ -303,13 +310,10 @@ void print_ephtbl32(Elf32_Ehdr hdr, FILE* elf){
  * This function prints all information contained
  * on Elf32 section header table
  */
-void print_eshtbl32(Elf32_Ehdr hdr, FILE* elf){
+void print_eshtbl32(Elf32_Ehdr hdr, char* mem){
     //Get the section header table
     Elf32_Shdr* shdr = malloc(hdr.e_shentsize * hdr.e_shnum);
-    fseek(elf, hdr.e_shoff, SEEK_SET);
-    fread(shdr, hdr.e_shentsize, hdr.e_shnum, elf);
-    if(feof(elf))
-        fatal("[-] Unexpected EOF while parsing section header table");
+    memcpy(shdr,mem + hdr.e_shoff, hdr.e_shentsize * hdr.e_shnum);
     
     //print each shdr
     for(int i=0; i < hdr.e_shnum; i++){
@@ -385,13 +389,10 @@ void print_ehdr64(Elf64_Ehdr hdr){
  * This function prints all information contained
  * on an Elf64 program header table
  */
-void print_ephtbl64(Elf64_Ehdr hdr, FILE* elf){
+void print_ephtbl64(Elf64_Ehdr hdr, char* mem){
     //Get the program header table
     Elf64_Phdr* phdr = malloc(hdr.e_phentsize * hdr.e_phnum);
-    fseek(elf, hdr.e_phoff, SEEK_SET);
-    fread(phdr, hdr.e_phentsize, hdr.e_phnum, elf);
-    if(feof(elf))
-        fatal("[-] Unexpected EOF while parsing program header table");
+    memcpy(phdr,mem + hdr.e_phoff, hdr.e_phentsize * hdr.e_phnum);
     
     puts("");
     puts("==========================================Program header table==========================================");
@@ -431,13 +432,10 @@ void print_ephtbl64(Elf64_Ehdr hdr, FILE* elf){
  * This function prints all information contained
  * on an Elf64 section header table
  */
-void print_eshtbl64(Elf64_Ehdr hdr, FILE* elf){
+void print_eshtbl64(Elf64_Ehdr hdr, char* mem){
     //Get the section header table
     Elf64_Shdr* shdr = malloc(hdr.e_shentsize * hdr.e_shnum);
-    fseek(elf, hdr.e_shoff, SEEK_SET);
-    fread(shdr, hdr.e_shentsize, hdr.e_shnum, elf);
-    if(feof(elf))
-        fatal("[-] Unexpected EOF while parsing section header table");
+    memcpy(shdr, mem + hdr.e_shoff, hdr.e_shentsize * hdr.e_shnum);
     
     
     //print each shdr
@@ -475,14 +473,23 @@ void print_eshdr64(Elf64_Shdr shdr){
 }
 
 /*
- * This is the main function that will parse
- * and print each item of the Elf64
+ * This is the main function that will map the  
+ * ELF64 into memory, parse it and print each  
+ * component of it
  */
 void parse_elf64(Elf64_Ehdr hdr, FILE* elf){
+    
+    struct stat elf_stat;
+    if(fstat(fileno(elf), &elf_stat) < 0)
+        fatal("[-] Can't get the file size");
+    char* mem = mmap(NULL, elf_stat.st_size, PROT_READ, MAP_PRIVATE, fileno(elf), 0);
+    if(mem == MAP_FAILED)
+        fatal("[-] Can't allocate memory for the file");
+    
     print_ehdr64(hdr);
     
     if(hdr.e_phoff)
-        print_ephtbl64(hdr, elf);
+        print_ephtbl64(hdr, mem);
     if(hdr.e_shoff)
-        print_eshtbl64(hdr, elf);
+        print_eshtbl64(hdr, mem);
 }

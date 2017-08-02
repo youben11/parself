@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <elf.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
 
 void usage(char* prog);
 void fatal(char* msg);
@@ -24,8 +26,8 @@ char* get_phflags(unsigned int flags);
 //Elf32 functions
 void parse_elf32(Elf32_Ehdr hdr, FILE* elf);
 void print_ehdr32(Elf32_Ehdr hdr);
-void print_ephtbl32(Elf32_Ehdr hdr, FILE* elf);
-void print_eshtbl32(Elf32_Ehdr hdr, FILE* elf);
+void print_ephtbl32(Elf32_Ehdr hdr, char* mem);
+void print_eshtbl32(Elf32_Ehdr hdr, char* mem);
 void print_ephdr32(Elf32_Phdr phdr);
 void print_eshdr32(Elf32_Shdr shdr);
 
@@ -33,8 +35,8 @@ void print_eshdr32(Elf32_Shdr shdr);
 //Elf64 functions
 void parse_elf64(Elf64_Ehdr hdr, FILE* elf);
 void print_ehdr64(Elf64_Ehdr hdr);
-void print_ephtbl64(Elf64_Ehdr hdr, FILE* elf);
-void print_eshtbl64(Elf64_Ehdr hdr, FILE* elf);
+void print_ephtbl64(Elf64_Ehdr hdr, char* mem);
+void print_eshtbl64(Elf64_Ehdr hdr, char* mem);
 void print_ephdr64(Elf64_Phdr phdr);
 void print_eshdr64(Elf64_Shdr shdr);
 
