@@ -330,6 +330,9 @@ void parse_elf32(Elf32_Ehdr hdr, FILE* elf){
         print_ephtbl32(hdr);
     if(hdr.e_shoff)
         print_eshtbl32(hdr);
+    
+    print_esymtbl32(SYMTAB32, ".symtab");
+    print_esymtbl32(DYNSYM32, ".dynsym");
 }
 
 /*
@@ -364,7 +367,7 @@ void print_ephtbl32(Elf32_Ehdr hdr){
     
     //print each phdr
     for(int i=0; i < hdr.e_phnum; i++){
-        print_ephdr32(phdr[i]);
+        print_ephdr32(&phdr[i]);
     }
     
     puts("");
@@ -410,7 +413,7 @@ void print_eshtbl32(Elf32_Ehdr hdr){
     
     //print each shdr
     for(int i=0; i < hdr.e_shnum; i++){
-        print_eshdr32(shdr[i]);
+        print_eshdr32(&shdr[i]);
     }
     
     puts("");
@@ -420,43 +423,92 @@ void print_eshtbl32(Elf32_Ehdr hdr){
 }
 
 /*
+ * This function prints all information contained
+ * on an Elf32 symbol table
+ */
+void print_esymtbl32(Elf32_Shdr* shdr, char* name){
+    
+    if(!shdr){
+        puts("");
+        printf("[*] There is no %s section\n", name);
+        return ;
+    }
+
+    //Get the symbol table
+    Elf32_Sym* sym = (Elf32_Sym*) &ELF[shdr->sh_offset];
+    
+    puts("");
+    printf("==========================================%s table===========================================\n", name);
+    printf("offset in file : 0x%x\n", shdr->sh_offset);
+    printf("Number of entry : %d\n", shdr->sh_size / shdr->sh_entsize);
+    puts("");
+    //title of the table
+    printf("Value");
+    space(6);
+    printf("Size  ");   
+    printf("Type");
+    space(4);
+    printf("Bind");
+    space(3);
+    printf("Index ");
+    printf("Name");
+    puts("");
+    
+    //print each shdr
+    for(int i=0; i < shdr->sh_size / shdr->sh_entsize; i++){
+        //print_esym32(&sym[i]);
+    }
+    
+    puts("");
+    puts("===============================================EOST===============================================");
+    puts("");
+    
+}
+
+/*
  * This function prints a 32 bits program header
  */
-void print_ephdr32(Elf32_Phdr phdr){
+void print_ephdr32(Elf32_Phdr* phdr){
     int printed;
     puts("");
-    printed = printf("%s", get_phtype(phdr.p_type));
+    printed = printf("%s", get_phtype(phdr->p_type));
     space(14 - printed);
-    printf("0x%08x ", phdr.p_offset);
-    printf("0x%08x ", phdr.p_filesz);
-    printf("0x%08x ", phdr.p_memsz);
-    printf("0x%08x ", phdr.p_vaddr);
-    printf("0x%08x ", phdr.p_paddr);
-    printf("0x%08x ", phdr.p_align);
-    printf("%s", get_phflags(phdr.p_flags));
+    printf("0x%08x ", phdr->p_offset);
+    printf("0x%08x ", phdr->p_filesz);
+    printf("0x%08x ", phdr->p_memsz);
+    printf("0x%08x ", phdr->p_vaddr);
+    printf("0x%08x ", phdr->p_paddr);
+    printf("0x%08x ", phdr->p_align);
+    printf("%s", get_phflags(phdr->p_flags));
     puts("");
 }
 
 /*
  * This function prints a 32 bits section header
  */
-void print_eshdr32(Elf32_Shdr shdr){
+void print_eshdr32(Elf32_Shdr* shdr){
     int printed;
     puts("");
-    printed = printf("%s", &STRTAB[shdr.sh_name]);
+    printed = printf("%s", &STRTAB[shdr->sh_name]);
     space(20 - printed);
-    printed = printf("%s", get_shtype(shdr.sh_type));
+    printed = printf("%s", get_shtype(shdr->sh_type));
     space(14 - printed);
-    printf("0x%08x ", shdr.sh_addr);
-    printf("0x%08x ", shdr.sh_offset);
-    printf("0x%08x ", shdr.sh_size);
-    printf("0x%08x ", shdr.sh_entsize);
-    printf("0x%08x ", shdr.sh_addralign);
-    printf(" %s    ", get_shflags(shdr.sh_flags));
-    printed = printf("0x%x ", shdr.sh_link);
+    printf("0x%08x ", shdr->sh_addr);
+    printf("0x%08x ", shdr->sh_offset);
+    printf("0x%08x ", shdr->sh_size);
+    printf("0x%08x ", shdr->sh_entsize);
+    printf("0x%08x ", shdr->sh_addralign);
+    printf(" %s    ", get_shflags(shdr->sh_flags));
+    printed = printf("0x%x ", shdr->sh_link);
     space(7 - printed);
-    printf("0x%x ", shdr.sh_info);
+    printf("0x%x ", shdr->sh_info);
     puts("");
+    
+    if(!strcmp(".symtab", &STRTAB[shdr->sh_name]))
+        SYMTAB32 = shdr;
+    else if(!strcmp(".dynsym", &STRTAB[shdr->sh_name]))
+        DYNSYM32 = shdr;
+            
 }
 
 /*
@@ -528,7 +580,7 @@ void print_ephtbl64(Elf64_Ehdr hdr){
     
     //print each phdr
     for(int i=0; i < hdr.e_phnum; i++){
-        print_ephdr64(phdr[i]);
+        print_ephdr64(&phdr[i]);
     }
     
     puts("");
@@ -574,7 +626,7 @@ void print_eshtbl64(Elf64_Ehdr hdr){
     
     //print each shdr
     for(int i=0; i < hdr.e_shnum; i++){
-        print_eshdr64(shdr[i]);
+        print_eshdr64(&shdr[i]);
     }
     
     puts("");
@@ -584,20 +636,63 @@ void print_eshtbl64(Elf64_Ehdr hdr){
 }
 
 /*
+ * This function prints all information contained
+ * on an Elf64 symbol table
+ */
+void print_esymtbl64(Elf64_Shdr* shdr, char* name){
+    
+    if(!shdr){
+        puts("");
+        printf("[*] There is no %s section\n", name);
+        return ;
+    }
+
+    //Get the symbol table
+    Elf64_Sym* sym = (Elf64_Sym*) &ELF[shdr->sh_offset];
+    
+    puts("");
+    printf("==========================================%s table===========================================\n", name);
+    printf("offset in file : 0x%x\n", shdr->sh_offset);
+    printf("Number of entry : %d\n", shdr->sh_size / shdr->sh_entsize);
+    puts("");
+    //title of the table
+    printf("Value");
+    space(14);
+    printf("Size  ");   
+    printf("Type");
+    space(4);
+    printf("Bind");
+    space(3);
+    printf("Index ");
+    printf("Name");
+    puts("");
+    
+    //print each shdr
+    for(int i=0; i < shdr->sh_size / shdr->sh_entsize; i++){
+        //print_esym64(&sym[i]);
+    }
+    
+    puts("");
+    puts("===============================================EOST===============================================");
+    puts("");
+    
+}
+
+/*
  * This function prints a 64 bits program header
  */
-void print_ephdr64(Elf64_Phdr phdr){
+void print_ephdr64(Elf64_Phdr* phdr){
     int printed;
     puts("");
-    printed = printf("%s", get_phtype(phdr.p_type));
+    printed = printf("%s", get_phtype(phdr->p_type));
     space(14 - printed);
-    printf("0x%016x ", phdr.p_offset);
-    printf("0x%016x ", phdr.p_filesz);
-    printf("0x%016x ", phdr.p_memsz);
-    printf("0x%016x ", phdr.p_vaddr);
-    printf("0x%016x ", phdr.p_paddr);
-    printf("0x%016x ", phdr.p_align);
-    printf("%s", get_phflags(phdr.p_flags));
+    printf("0x%016x ", phdr->p_offset);
+    printf("0x%016x ", phdr->p_filesz);
+    printf("0x%016x ", phdr->p_memsz);
+    printf("0x%016x ", phdr->p_vaddr);
+    printf("0x%016x ", phdr->p_paddr);
+    printf("0x%016x ", phdr->p_align);
+    printf("%s", get_phflags(phdr->p_flags));
     puts("");
    
 }
@@ -605,24 +700,30 @@ void print_ephdr64(Elf64_Phdr phdr){
 /*
  * This function prints a 64 bits section header
  */
-void print_eshdr64(Elf64_Shdr shdr){
+void print_eshdr64(Elf64_Shdr* shdr){
     int printed;
     puts("");
-    printed = printf("%s", &STRTAB[shdr.sh_name]);
+    printed = printf("%s", &STRTAB[shdr->sh_name]);
     space(20 - printed);
-    printed = printf("%s", get_shtype(shdr.sh_type));
+    printed = printf("%s", get_shtype(shdr->sh_type));
     space(14 - printed);
-    printf("0x%016x ", shdr.sh_addr);
-    printf("0x%016x ", shdr.sh_offset);
-    printf("0x%016x ", shdr.sh_size);
-    printf("0x%016x ", shdr.sh_entsize);
-    printf("0x%016x ", shdr.sh_addralign);
-    printf(" %s    ", get_shflags(shdr.sh_flags));
-    printed = printf("0x%x ", shdr.sh_link);
+    printf("0x%016x ", shdr->sh_addr);
+    printf("0x%016x ", shdr->sh_offset);
+    printf("0x%016x ", shdr->sh_size);
+    printf("0x%016x ", shdr->sh_entsize);
+    printf("0x%016x ", shdr->sh_addralign);
+    printf(" %s    ", get_shflags(shdr->sh_flags));
+    printed = printf("0x%x ", shdr->sh_link);
     space(7 - printed);
-    printf("0x%x ", shdr.sh_info);
+    printf("0x%x ", shdr->sh_info);
     puts("");
-}
+    
+    if(!strcmp(".symtab", &STRTAB[shdr->sh_name]))
+        SYMTAB64 = shdr;
+    else if(!strcmp(".dynsym", &STRTAB[shdr->sh_name]))
+        DYNSYM64 = shdr;
+    
+}   
 
 /*
  * This is the main function that will map the  
@@ -644,4 +745,7 @@ void parse_elf64(Elf64_Ehdr hdr, FILE* elf){
         print_ephtbl64(hdr);
     if(hdr.e_shoff)
         print_eshtbl64(hdr);
+        
+    print_esymtbl64(SYMTAB64, ".symtab");
+    print_esymtbl64(DYNSYM64, ".dymsym");
 }

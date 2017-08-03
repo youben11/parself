@@ -11,6 +11,12 @@
 char* ELF; // addr of the content of the ELF
 char* STRTAB; // addr of the string table
 
+Elf32_Shdr* SYMTAB32;
+Elf32_Shdr* DYNSYM32;
+
+Elf64_Shdr* SYMTAB64;
+Elf64_Shdr* DYNSYM64;
+
 
 void usage(char* prog);
 void fatal(char* msg);
@@ -35,8 +41,9 @@ void parse_elf32(Elf32_Ehdr hdr, FILE* elf);
 void print_ehdr32(Elf32_Ehdr hdr);
 void print_ephtbl32(Elf32_Ehdr hdr);
 void print_eshtbl32(Elf32_Ehdr hdr);
-void print_ephdr32(Elf32_Phdr phdr);
-void print_eshdr32(Elf32_Shdr shdr);
+void print_esymtbl32(Elf32_Shdr* shdr, char* name);
+void print_ephdr32(Elf32_Phdr* phdr);
+void print_eshdr32(Elf32_Shdr* shdr);
 
 
 //Elf64 functions
@@ -44,8 +51,9 @@ void parse_elf64(Elf64_Ehdr hdr, FILE* elf);
 void print_ehdr64(Elf64_Ehdr hdr);
 void print_ephtbl64(Elf64_Ehdr hdr);
 void print_eshtbl64(Elf64_Ehdr hdr);
-void print_ephdr64(Elf64_Phdr phdr);
-void print_eshdr64(Elf64_Shdr shdr);
+void print_esymtbl64(Elf64_Shdr* shdr, char* name);
+void print_ephdr64(Elf64_Phdr* phdr);
+void print_eshdr64(Elf64_Shdr* shdr);
 
 
 
