@@ -320,27 +320,25 @@ void parse_elf32(Elf32_Ehdr hdr, FILE* elf){
     struct stat elf_stat;
     if(fstat(fileno(elf), &elf_stat) < 0)
         fatal("[-] Can't get the file size");
-    char* mem = mmap(NULL, elf_stat.st_size, PROT_READ, MAP_PRIVATE, fileno(elf), 0);
-    if(mem == MAP_FAILED)
+    ELF = mmap(NULL, elf_stat.st_size, PROT_READ, MAP_PRIVATE, fileno(elf), 0);
+    if(ELF == MAP_FAILED)
         fatal("[-] Can't allocate memory for the file");
     
     print_ehdr32(hdr);
     
     if(hdr.e_phoff)
-        print_ephtbl32(hdr, mem);
+        print_ephtbl32(hdr);
     if(hdr.e_shoff)
-        print_eshtbl32(hdr, mem);
+        print_eshtbl32(hdr);
 }
 
 /*
  * This function prints all information contained
  * on an Elf32 program header table
  */
-void print_ephtbl32(Elf32_Ehdr hdr, char* elf){
+void print_ephtbl32(Elf32_Ehdr hdr){
     //Get the program header table
-    Elf32_Phdr* phdr = malloc(hdr.e_phentsize * hdr.e_phnum);
-    memcpy(phdr,elf + hdr.e_phoff, hdr.e_phentsize * hdr.e_phnum);
-
+    Elf32_Phdr* phdr = (Elf32_Phdr*) &ELF[hdr.e_phoff];
     
     puts("");
     puts("==========================================Program header table==========================================");
@@ -373,22 +371,20 @@ void print_ephtbl32(Elf32_Ehdr hdr, char* elf){
     puts("===================================================EOPHT===================================================");
     puts("");
     
-    free(phdr);
 }
 
 /*
  * This function prints all information contained
  * on Elf32 section header table
  */
-void print_eshtbl32(Elf32_Ehdr hdr, char* elf){
+void print_eshtbl32(Elf32_Ehdr hdr){
     //Get the section header table
-    Elf32_Shdr* shdr = malloc(hdr.e_shentsize * hdr.e_shnum);
-    memcpy(shdr,elf + hdr.e_shoff, hdr.e_shentsize * hdr.e_shnum);
-
+    Elf32_Shdr* shdr = (Elf32_Shdr*) &ELF[hdr.e_shoff];
+    
     puts("");
     puts("===========================================Section header table===========================================");
-    printf("offset in file : 0x%x\n", hdr.e_phoff);
-    printf("Number of entry : %d\n", hdr.e_phnum);
+    printf("offset in file : 0x%x\n", hdr.e_shoff);
+    printf("Number of entry : %d\n", hdr.e_shnum);
     puts("");
     //title of the table
     printf("Name");
@@ -410,18 +406,17 @@ void print_eshtbl32(Elf32_Ehdr hdr, char* elf){
     printf("Info\n");
     
     //Get the section header string table
-    char* strtab = &elf[shdr[hdr.e_shstrndx].sh_offset];
+    STRTAB = &ELF[shdr[hdr.e_shstrndx].sh_offset];
     
     //print each shdr
     for(int i=0; i < hdr.e_shnum; i++){
-        print_eshdr32(shdr[i], strtab);
+        print_eshdr32(shdr[i]);
     }
     
     puts("");
     puts("===================================================EOSHT===================================================");
     puts("");
     
-    free(shdr);
 }
 
 /*
@@ -445,10 +440,10 @@ void print_ephdr32(Elf32_Phdr phdr){
 /*
  * This function prints a 32 bits section header
  */
-void print_eshdr32(Elf32_Shdr shdr, char* strtab){
+void print_eshdr32(Elf32_Shdr shdr){
     int printed;
     puts("");
-    printed = printf("%s", &strtab[shdr.sh_name]);
+    printed = printf("%s", &STRTAB[shdr.sh_name]);
     space(20 - printed);
     printed = printf("%s", get_shtype(shdr.sh_type));
     space(14 - printed);
@@ -505,10 +500,9 @@ void print_ehdr64(Elf64_Ehdr hdr){
  * This function prints all information contained
  * on an Elf64 program header table
  */
-void print_ephtbl64(Elf64_Ehdr hdr, char* elf){
+void print_ephtbl64(Elf64_Ehdr hdr){
     //Get the program header table
-    Elf64_Phdr* phdr = malloc(hdr.e_phentsize * hdr.e_phnum);
-    memcpy(phdr,elf + hdr.e_phoff, hdr.e_phentsize * hdr.e_phnum);
+    Elf64_Phdr* phdr = (Elf64_Phdr*) &ELF[hdr.e_phoff];
     
     puts("");
     puts("==========================================Program header table==========================================");
@@ -541,22 +535,20 @@ void print_ephtbl64(Elf64_Ehdr hdr, char* elf){
     puts("===================================================EOPHT===================================================");
     puts("");
     
-    free(phdr);
 }
 
 /*
  * This function prints all information contained
  * on an Elf64 section header table
  */
-void print_eshtbl64(Elf64_Ehdr hdr, char* elf){
+void print_eshtbl64(Elf64_Ehdr hdr){
     //Get the section header table
-    Elf64_Shdr* shdr = malloc(hdr.e_shentsize * hdr.e_shnum);
-    memcpy(shdr, elf + hdr.e_shoff, hdr.e_shentsize * hdr.e_shnum);
+    Elf64_Shdr* shdr = (Elf64_Shdr*) &ELF[hdr.e_shoff]; 
     
     puts("");
     puts("===========================================Section header table===========================================");
-    printf("offset in file : 0x%x\n", hdr.e_phoff);
-    printf("Number of entry : %d\n", hdr.e_phnum);
+    printf("offset in file : 0x%x\n", hdr.e_shoff);
+    printf("Number of entry : %d\n", hdr.e_shnum);
     puts("");
     //title of the table
     printf("Name");
@@ -578,18 +570,17 @@ void print_eshtbl64(Elf64_Ehdr hdr, char* elf){
     printf("Info\n");
     
     //Get the section header string table
-    char* strtab = &elf[shdr[hdr.e_shstrndx].sh_offset];
+    STRTAB = &ELF[shdr[hdr.e_shstrndx].sh_offset];
     
     //print each shdr
     for(int i=0; i < hdr.e_shnum; i++){
-        print_eshdr64(shdr[i], strtab);
+        print_eshdr64(shdr[i]);
     }
     
     puts("");
     puts("===================================================EOSHT===================================================");
     puts("");
     
-    free(shdr);
 }
 
 /*
@@ -614,10 +605,10 @@ void print_ephdr64(Elf64_Phdr phdr){
 /*
  * This function prints a 64 bits section header
  */
-void print_eshdr64(Elf64_Shdr shdr,char* strtab){
+void print_eshdr64(Elf64_Shdr shdr){
     int printed;
     puts("");
-    printed = printf("%s", &strtab[shdr.sh_name]);
+    printed = printf("%s", &STRTAB[shdr.sh_name]);
     space(20 - printed);
     printed = printf("%s", get_shtype(shdr.sh_type));
     space(14 - printed);
@@ -643,14 +634,14 @@ void parse_elf64(Elf64_Ehdr hdr, FILE* elf){
     struct stat elf_stat;
     if(fstat(fileno(elf), &elf_stat) < 0)
         fatal("[-] Can't get the file size");
-    char* mem = mmap(NULL, elf_stat.st_size, PROT_READ, MAP_PRIVATE, fileno(elf), 0);
-    if(mem == MAP_FAILED)
+    ELF = mmap(NULL, elf_stat.st_size, PROT_READ, MAP_PRIVATE, fileno(elf), 0);
+    if(ELF == MAP_FAILED)
         fatal("[-] Can't allocate memory for the file");
     
     print_ehdr64(hdr);
     
     if(hdr.e_phoff)
-        print_ephtbl64(hdr, mem);
+        print_ephtbl64(hdr);
     if(hdr.e_shoff)
-        print_eshtbl64(hdr, mem);
+        print_eshtbl64(hdr);
 }

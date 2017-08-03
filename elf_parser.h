@@ -8,6 +8,10 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
+char* ELF; // addr of the content of the ELF
+char* STRTAB; // addr of the string table
+
+
 void usage(char* prog);
 void fatal(char* msg);
 int check_magic(char* ident);
@@ -23,22 +27,25 @@ char* get_hmachine(unsigned short machine);
 char* get_phtype(unsigned int type);
 char* get_phflags(unsigned int flags);
 
+char* get_shtype(unsigned int type);
+char* get_shflags(unsigned int flags);
+
 //Elf32 functions
 void parse_elf32(Elf32_Ehdr hdr, FILE* elf);
 void print_ehdr32(Elf32_Ehdr hdr);
-void print_ephtbl32(Elf32_Ehdr hdr, char* elf);
-void print_eshtbl32(Elf32_Ehdr hdr, char* elf);
+void print_ephtbl32(Elf32_Ehdr hdr);
+void print_eshtbl32(Elf32_Ehdr hdr);
 void print_ephdr32(Elf32_Phdr phdr);
-void print_eshdr32(Elf32_Shdr shdr, char* stratab);
+void print_eshdr32(Elf32_Shdr shdr);
 
 
 //Elf64 functions
 void parse_elf64(Elf64_Ehdr hdr, FILE* elf);
 void print_ehdr64(Elf64_Ehdr hdr);
-void print_ephtbl64(Elf64_Ehdr hdr, char* elf);
-void print_eshtbl64(Elf64_Ehdr hdr, char* elf);
+void print_ephtbl64(Elf64_Ehdr hdr);
+void print_eshtbl64(Elf64_Ehdr hdr);
 void print_ephdr64(Elf64_Phdr phdr);
-void print_eshdr64(Elf64_Shdr shdr, char* strtab);
+void print_eshdr64(Elf64_Shdr shdr);
 
 
 
