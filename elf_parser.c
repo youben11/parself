@@ -208,6 +208,76 @@ char* get_phflags(unsigned int flags){
 }
 
 /*
+ * This function returns the corresponding section header
+ * type string of the variable type
+ */
+char* get_shtype(unsigned int type){
+    switch(type){
+        case SHT_NULL:
+            return "NULL";
+        case SHT_PROGBITS:
+            return "PROGBITS";
+        case SHT_SYMTAB:
+            return "SYMTAB";
+        case SHT_STRTAB:
+            return "STRTAB";
+        case SHT_RELA:
+            return "RELA";
+        case SHT_HASH:
+            return "HASH";
+        case SHT_DYNAMIC:
+            return "DYNAMIC";
+        case SHT_NOTE:
+            return "NOTE";
+        case SHT_NOBITS:
+            return "NOBITS";
+        case SHT_REL:
+            return "REL";
+        case SHT_SHLIB:
+            return "SHLIB";
+        case SHT_DYNSYM:
+            return "DYNSYM";
+        case SHT_LOPROC:
+            return "LOPROC";
+        case SHT_HIPROC:
+            return "HIPROC";
+        case SHT_LOUSER:
+            return "LOUSER";
+        case SHT_HIUSER:
+            return "HIUSER";
+        
+        default:
+            return "UNKNOWN";
+    }
+}
+
+/*
+ * This function returns the corresponding program header
+ * flags string of the variable flags
+ */
+char* get_shflags(unsigned int flags){
+    char* perm = malloc(4);
+    perm[3] = '\0';
+    
+    if(flags & SHF_ALLOC)
+        perm[0] = 'A';
+    else
+        perm[0] = ' ';
+        
+    if(flags & SHF_WRITE)
+        perm[1] = 'W';
+    else
+        perm[1] = ' ';
+    
+    if(flags & SHF_EXECINSTR)
+        perm[2] = 'X';
+    else
+        perm[2] = ' ';
+        
+    return perm;    
+}
+
+/*
  * This function prints all inforamtion contained
  * on an Elf32 header
  */
@@ -266,10 +336,10 @@ void parse_elf32(Elf32_Ehdr hdr, FILE* elf){
  * This function prints all information contained
  * on an Elf32 program header table
  */
-void print_ephtbl32(Elf32_Ehdr hdr, char* mem){
+void print_ephtbl32(Elf32_Ehdr hdr, char* elf){
     //Get the program header table
     Elf32_Phdr* phdr = malloc(hdr.e_phentsize * hdr.e_phnum);
-    memcpy(phdr,mem + hdr.e_phoff, hdr.e_phentsize * hdr.e_phnum);
+    memcpy(phdr,elf + hdr.e_phoff, hdr.e_phentsize * hdr.e_phnum);
 
     
     puts("");
@@ -310,15 +380,46 @@ void print_ephtbl32(Elf32_Ehdr hdr, char* mem){
  * This function prints all information contained
  * on Elf32 section header table
  */
-void print_eshtbl32(Elf32_Ehdr hdr, char* mem){
+void print_eshtbl32(Elf32_Ehdr hdr, char* elf){
     //Get the section header table
     Elf32_Shdr* shdr = malloc(hdr.e_shentsize * hdr.e_shnum);
-    memcpy(shdr,mem + hdr.e_shoff, hdr.e_shentsize * hdr.e_shnum);
+    memcpy(shdr,elf + hdr.e_shoff, hdr.e_shentsize * hdr.e_shnum);
+
+    puts("");
+    puts("===========================================Section header table===========================================");
+    printf("offset in file : 0x%x\n", hdr.e_phoff);
+    printf("Number of entry : %d\n", hdr.e_phnum);
+    puts("");
+    //title of the table
+    printf("Name");
+    space(16);
+    printf("Type");
+    space(10);
+    printf("Address");
+    space(4);
+    printf("Offset");
+    space(5);
+    printf("Size");
+    space(7);
+    printf("Entry Size");
+    space(1);
+    printf("Align");
+    space(6);
+    printf("Flags  ");
+    printf("Link   ");
+    printf("Info\n");
+    
+    //Get the section header string table
+    char* strtab = &elf[shdr[hdr.e_shstrndx].sh_offset];
     
     //print each shdr
     for(int i=0; i < hdr.e_shnum; i++){
-        print_eshdr32(shdr[i]);
+        print_eshdr32(shdr[i], strtab);
     }
+    
+    puts("");
+    puts("===================================================EOSHT===================================================");
+    puts("");
     
     free(shdr);
 }
@@ -344,8 +445,23 @@ void print_ephdr32(Elf32_Phdr phdr){
 /*
  * This function prints a 32 bits section header
  */
-void print_eshdr32(Elf32_Shdr shdr){
-    //puts("Shdr");
+void print_eshdr32(Elf32_Shdr shdr, char* strtab){
+    int printed;
+    puts("");
+    printed = printf("%s", &strtab[shdr.sh_name]);
+    space(20 - printed);
+    printed = printf("%s", get_shtype(shdr.sh_type));
+    space(14 - printed);
+    printf("0x%08x ", shdr.sh_addr);
+    printf("0x%08x ", shdr.sh_offset);
+    printf("0x%08x ", shdr.sh_size);
+    printf("0x%08x ", shdr.sh_entsize);
+    printf("0x%08x ", shdr.sh_addralign);
+    printf(" %s    ", get_shflags(shdr.sh_flags));
+    printed = printf("0x%x ", shdr.sh_link);
+    space(7 - printed);
+    printf("0x%x ", shdr.sh_info);
+    puts("");
 }
 
 /*
@@ -389,10 +505,10 @@ void print_ehdr64(Elf64_Ehdr hdr){
  * This function prints all information contained
  * on an Elf64 program header table
  */
-void print_ephtbl64(Elf64_Ehdr hdr, char* mem){
+void print_ephtbl64(Elf64_Ehdr hdr, char* elf){
     //Get the program header table
     Elf64_Phdr* phdr = malloc(hdr.e_phentsize * hdr.e_phnum);
-    memcpy(phdr,mem + hdr.e_phoff, hdr.e_phentsize * hdr.e_phnum);
+    memcpy(phdr,elf + hdr.e_phoff, hdr.e_phentsize * hdr.e_phnum);
     
     puts("");
     puts("==========================================Program header table==========================================");
@@ -432,16 +548,46 @@ void print_ephtbl64(Elf64_Ehdr hdr, char* mem){
  * This function prints all information contained
  * on an Elf64 section header table
  */
-void print_eshtbl64(Elf64_Ehdr hdr, char* mem){
+void print_eshtbl64(Elf64_Ehdr hdr, char* elf){
     //Get the section header table
     Elf64_Shdr* shdr = malloc(hdr.e_shentsize * hdr.e_shnum);
-    memcpy(shdr, mem + hdr.e_shoff, hdr.e_shentsize * hdr.e_shnum);
+    memcpy(shdr, elf + hdr.e_shoff, hdr.e_shentsize * hdr.e_shnum);
     
+    puts("");
+    puts("===========================================Section header table===========================================");
+    printf("offset in file : 0x%x\n", hdr.e_phoff);
+    printf("Number of entry : %d\n", hdr.e_phnum);
+    puts("");
+    //title of the table
+    printf("Name");
+    space(16);
+    printf("Type");
+    space(10);
+    printf("Address");
+    space(12);
+    printf("Offset");
+    space(13);
+    printf("Size");
+    space(15);
+    printf("Entry Size");
+    space(9);
+    printf("Align");
+    space(14);
+    printf("Flags  ");
+    printf("Link   ");
+    printf("Info\n");
+    
+    //Get the section header string table
+    char* strtab = &elf[shdr[hdr.e_shstrndx].sh_offset];
     
     //print each shdr
     for(int i=0; i < hdr.e_shnum; i++){
-        print_eshdr64(shdr[i]);
+        print_eshdr64(shdr[i], strtab);
     }
+    
+    puts("");
+    puts("===================================================EOSHT===================================================");
+    puts("");
     
     free(shdr);
 }
@@ -468,8 +614,23 @@ void print_ephdr64(Elf64_Phdr phdr){
 /*
  * This function prints a 64 bits section header
  */
-void print_eshdr64(Elf64_Shdr shdr){
-    //puts("Shdr");
+void print_eshdr64(Elf64_Shdr shdr,char* strtab){
+    int printed;
+    puts("");
+    printed = printf("%s", &strtab[shdr.sh_name]);
+    space(20 - printed);
+    printed = printf("%s", get_shtype(shdr.sh_type));
+    space(14 - printed);
+    printf("0x%016x ", shdr.sh_addr);
+    printf("0x%016x ", shdr.sh_offset);
+    printf("0x%016x ", shdr.sh_size);
+    printf("0x%016x ", shdr.sh_entsize);
+    printf("0x%016x ", shdr.sh_addralign);
+    printf(" %s    ", get_shflags(shdr.sh_flags));
+    printed = printf("0x%x ", shdr.sh_link);
+    space(7 - printed);
+    printf("0x%x ", shdr.sh_info);
+    puts("");
 }
 
 /*
