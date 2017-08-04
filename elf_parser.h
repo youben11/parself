@@ -8,8 +8,11 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
+
 char* ELF; // addr of the content of the ELF
+char* SHSTRTAB; // addr of the section header string table
 char* STRTAB; // addr of the string table
+char* DYNSTR; //addr of the dynamic string table
 
 Elf32_Shdr* SYMTAB32;
 Elf32_Shdr* DYNSYM32;
@@ -51,7 +54,7 @@ void print_eshtbl32(Elf32_Ehdr hdr);
 void print_esymtbl32(Elf32_Shdr* shdr, char* name);
 void print_ephdr32(Elf32_Phdr* phdr);
 void print_eshdr32(Elf32_Shdr* shdr, int index);
-void print_esym32(Elf32_Sym* sym, int index);
+void print_esym32(Elf32_Sym* sym, int index, char* name);
 
 
 //Elf64 functions
@@ -62,7 +65,7 @@ void print_eshtbl64(Elf64_Ehdr hdr);
 void print_esymtbl64(Elf64_Shdr* shdr, char* name);
 void print_ephdr64(Elf64_Phdr* phdr);
 void print_eshdr64(Elf64_Shdr* shdr, int index);
-void print_esym64(Elf64_Sym* sym, int index);
+void print_esym64(Elf64_Sym* sym, int index, char* name);
 
 
 

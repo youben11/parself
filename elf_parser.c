@@ -553,7 +553,7 @@ void print_eshtbl32(Elf32_Ehdr hdr){
     printf("Info\n");
     
     //Get the section header string table
-    STRTAB = &ELF[shdr[hdr.e_shstrndx].sh_offset];
+    SHSTRTAB = &ELF[shdr[hdr.e_shstrndx].sh_offset];
     
     //print each shdr
     for(int i=0; i < hdr.e_shnum; i++){
@@ -602,7 +602,7 @@ void print_esymtbl32(Elf32_Shdr* shdr, char* name){
     
     //print each shdr
     for(int i=0; i < shdr->sh_size / shdr->sh_entsize; i++){
-        print_esym32(&sym[i], i);
+        print_esym32(&sym[i], i, name);
     }
     
     puts("");
@@ -636,7 +636,7 @@ void print_eshdr32(Elf32_Shdr* shdr, int index){
     int printed;
     puts("");
     printf("[%03d] ", index);
-    printed = printf("%s", &STRTAB[shdr->sh_name]);
+    printed = printf("%s", &SHSTRTAB[shdr->sh_name]);
     space(20 - printed);
     printed = printf("%s", get_shtype(shdr->sh_type));
     space(14 - printed);
@@ -651,14 +651,26 @@ void print_eshdr32(Elf32_Shdr* shdr, int index){
     printf("0x%x ", shdr->sh_info);
     puts("");
     
-    if(!strcmp(".symtab", &STRTAB[shdr->sh_name]))
+    if(!strcmp(".symtab", &SHSTRTAB[shdr->sh_name]))
         SYMTAB32 = shdr;
-    else if(!strcmp(".dynsym", &STRTAB[shdr->sh_name]))
+    else if(!strcmp(".dynsym", &SHSTRTAB[shdr->sh_name]))
         DYNSYM32 = shdr;
+    else if(!strcmp(".strtab", &SHSTRTAB[shdr->sh_name]))
+        STRTAB = &ELF[shdr->sh_offset];
+    else if(!strcmp(".dynstr", &SHSTRTAB[shdr->sh_name]))
+        DYNSTR = &ELF[shdr->sh_offset];
             
 }
 
-void print_esym32(Elf32_Sym* sym, int index){
+void print_esym32(Elf32_Sym* sym, int index, char* name){
+    
+    //set the apropriate string table
+    char* strtab;
+    if(!strcmp(".dynsym", name))
+        strtab = DYNSTR;
+    else
+        strtab = STRTAB;
+        
     int printed;
     puts("");
     printf("[%03d] ", index);
@@ -671,7 +683,7 @@ void print_esym32(Elf32_Sym* sym, int index){
     printed = printf("%s", get_symvis64(sym->st_other));
     space(10 - printed);
     printed = printf("%6d ", sym->st_shndx);
-    printf("%s", &STRTAB[sym->st_name]);    
+    printf("%s", &strtab[sym->st_name]);    
     puts("");
    
 }
@@ -795,7 +807,7 @@ void print_eshtbl64(Elf64_Ehdr hdr){
     printf("Info\n");
     
     //Get the section header string table
-    STRTAB = &ELF[shdr[hdr.e_shstrndx].sh_offset];
+    SHSTRTAB = &ELF[shdr[hdr.e_shstrndx].sh_offset];
     
     //print each shdr
     for(int i=0; i < hdr.e_shnum; i++){
@@ -844,7 +856,7 @@ void print_esymtbl64(Elf64_Shdr* shdr, char* name){
     
     //print each shdr
     for(int i=0; i < shdr->sh_size / shdr->sh_entsize; i++){
-        print_esym64(&sym[i], i);
+        print_esym64(&sym[i], i, name);
     }
     
     puts("");
@@ -879,7 +891,7 @@ void print_eshdr64(Elf64_Shdr* shdr, int index){
     int printed;
     puts("");
     printf("[%03d] ", index);
-    printed = printf("%s", &STRTAB[shdr->sh_name]);
+    printed = printf("%s", &SHSTRTAB[shdr->sh_name]);
     space(20 - printed);
     printed = printf("%s", get_shtype(shdr->sh_type));
     space(14 - printed);
@@ -894,17 +906,29 @@ void print_eshdr64(Elf64_Shdr* shdr, int index){
     printf("0x%x ", shdr->sh_info);
     puts("");
     
-    if(!strcmp(".symtab", &STRTAB[shdr->sh_name]))
+    if(!strcmp(".symtab", &SHSTRTAB[shdr->sh_name]))
         SYMTAB64 = shdr;
-    else if(!strcmp(".dynsym", &STRTAB[shdr->sh_name]))
+    else if(!strcmp(".dynsym", &SHSTRTAB[shdr->sh_name]))
         DYNSYM64 = shdr;
+    else if(!strcmp(".strtab", &SHSTRTAB[shdr->sh_name]))
+        STRTAB = &ELF[shdr->sh_offset];
+    else if(!strcmp(".dynstr", &SHSTRTAB[shdr->sh_name]))
+        DYNSTR = &ELF[shdr->sh_offset];
     
 }   
 
 /*
  * This function prints a 64 bits symbol table index
  */
-void print_esym64(Elf64_Sym* sym, int index){
+void print_esym64(Elf64_Sym* sym, int index, char* name){
+    
+    //set the apropriate string table
+    char* strtab;
+    if(!strcmp(".dynsym", name))
+        strtab = DYNSTR;
+    else
+        strtab = STRTAB;
+
     int printed;
     puts("");
     printf("[%03d] ", index);
@@ -917,7 +941,7 @@ void print_esym64(Elf64_Sym* sym, int index){
     printed = printf("%s", get_symvis64(sym->st_other));
     space(10 - printed);
     printed = printf("%6d ", sym->st_shndx);
-    printf("%s", &STRTAB[sym->st_name]);    
+    printf("%s", &strtab[sym->st_name]);    
     puts("");
    
 }
@@ -944,5 +968,5 @@ void parse_elf64(Elf64_Ehdr hdr, FILE* elf){
         print_eshtbl64(hdr);
         
     print_esymtbl64(SYMTAB64, ".symtab");
-    print_esymtbl64(DYNSYM64, ".dymsym");
+    print_esymtbl64(DYNSYM64, ".dynsym");
 }
