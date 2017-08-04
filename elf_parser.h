@@ -36,6 +36,13 @@ char* get_phflags(unsigned int flags);
 char* get_shtype(unsigned int type);
 char* get_shflags(unsigned int flags);
 
+char* get_symtype32(unsigned char info);
+char* get_symtype64(unsigned char info);
+char* get_symbind32(unsigned char info);
+char* get_symbind64(unsigned char info);
+char* get_symvis32(unsigned char other);
+char* get_symvis64(unsigned char other);
+
 //Elf32 functions
 void parse_elf32(Elf32_Ehdr hdr, FILE* elf);
 void print_ehdr32(Elf32_Ehdr hdr);
@@ -43,7 +50,8 @@ void print_ephtbl32(Elf32_Ehdr hdr);
 void print_eshtbl32(Elf32_Ehdr hdr);
 void print_esymtbl32(Elf32_Shdr* shdr, char* name);
 void print_ephdr32(Elf32_Phdr* phdr);
-void print_eshdr32(Elf32_Shdr* shdr);
+void print_eshdr32(Elf32_Shdr* shdr, int index);
+void print_esym32(Elf32_Sym* sym, int index);
 
 
 //Elf64 functions
@@ -53,7 +61,8 @@ void print_ephtbl64(Elf64_Ehdr hdr);
 void print_eshtbl64(Elf64_Ehdr hdr);
 void print_esymtbl64(Elf64_Shdr* shdr, char* name);
 void print_ephdr64(Elf64_Phdr* phdr);
-void print_eshdr64(Elf64_Shdr* shdr);
+void print_eshdr64(Elf64_Shdr* shdr, int index);
+void print_esym64(Elf64_Sym* sym, int index);
 
 
 

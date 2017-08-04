@@ -278,6 +278,149 @@ char* get_shflags(unsigned int flags){
 }
 
 /*
+ * This function returns the corresponding symbol table
+ * index type string of the variable info
+ * for a 32 bits ELF
+ */
+char* get_symtype32(unsigned char info){
+    switch(ELF32_ST_TYPE(info)){
+        case STT_NOTYPE:
+            return "NOTYPE";
+        case STT_OBJECT:
+            return "OBJECT";
+        case STT_FUNC:
+            return "FUNCTION";
+        case STT_SECTION:
+            return "SECTION";
+        case STT_FILE:
+            return "FILE";
+        case STT_LOPROC:
+            return "LOPROC";
+        case STT_HIPROC:
+            return "HIPROC";
+            
+        default:
+            return "UNKNOWN";        
+    }
+}
+
+/*
+ * This function returns the corresponding symbol table
+ * index type string of the variable info
+ * for a 64 bits ELF
+ */
+char* get_symtype64(unsigned char info){
+    switch(ELF64_ST_TYPE(info)){
+        case STT_NOTYPE:
+            return "NOTYPE";
+        case STT_OBJECT:
+            return "OBJECT";
+        case STT_FUNC:
+            return "FUNCTION";
+        case STT_SECTION:
+            return "SECTION";
+        case STT_FILE:
+            return "FILE";
+        case STT_LOPROC:
+            return "LOPROC";
+        case STT_HIPROC:
+            return "HIPROC";
+            
+        default:
+            return "UNKNOWN";        
+    }
+}
+
+/*
+ * This function returns the corresponding symbol table
+ * index binding string of the variable info
+ * for a 32 bits ELF
+ */
+char* get_symbind32(unsigned char info){
+    switch(ELF32_ST_BIND(info)){
+        case STB_LOCAL:
+            return "LOCAL";
+        case STB_GLOBAL:
+            return "GLOBAL";
+        case STB_WEAK:
+            return "WEAK";
+        case STB_LOPROC:
+            return "LOPROC";
+        case STB_HIPROC:
+            return "HIPROC";
+            
+        default :
+            return "UNKNOWN";
+    }
+}
+
+/*
+ * This function returns the corresponding symbol table
+ * index binding string of the variable info
+ * for a 64 bits ELF
+ */
+char* get_symbind64(unsigned char info){
+    switch(ELF64_ST_BIND(info)){
+        case STB_LOCAL:
+            return "LOCAL";
+        case STB_GLOBAL:
+            return "GLOBAL";
+        case STB_WEAK:
+            return "WEAK";
+        case STB_LOPROC:
+            return "LOPROC";
+        case STB_HIPROC:
+            return "HIPROC";
+            
+        default :
+            return "UNKNOWN";
+    }
+} 
+
+/*
+ * This function returns the corresponding symbol table
+ * index visibilty string of the variable other
+ * for a 32 bits ELF
+ */
+char* get_symvis32(unsigned char other){
+    switch(ELF32_ST_VISIBILITY(other)){
+        case STV_DEFAULT:
+            return "DEFAULT";
+        case STV_INTERNAL:
+            return "INTERNAL";
+        case STV_HIDDEN:
+            return "HIDDEN";
+        case STV_PROTECTED:
+            return "PROTECTED";
+            
+        default :
+            return "UNKNOWN";
+    }
+}   
+
+/*
+ * This function returns the corresponding symbol table
+ * index visibilty string of the variable other
+ * for a 64 bits ELF
+ */
+char* get_symvis64(unsigned char other){
+    switch(ELF64_ST_VISIBILITY(other)){
+        case STV_DEFAULT:
+            return "DEFAULT";
+        case STV_INTERNAL:
+            return "INTERNAL";
+        case STV_HIDDEN:
+            return "HIDDEN";
+        case STV_PROTECTED:
+            return "PROTECTED";
+            
+        default :
+            return "UNKNOWN";
+    }
+} 
+
+
+/*
  * This function prints all inforamtion contained
  * on an Elf32 header
  */
@@ -390,6 +533,7 @@ void print_eshtbl32(Elf32_Ehdr hdr){
     printf("Number of entry : %d\n", hdr.e_shnum);
     puts("");
     //title of the table
+    space(6);
     printf("Name");
     space(16);
     printf("Type");
@@ -413,7 +557,7 @@ void print_eshtbl32(Elf32_Ehdr hdr){
     
     //print each shdr
     for(int i=0; i < hdr.e_shnum; i++){
-        print_eshdr32(&shdr[i]);
+        print_eshdr32(&shdr[i], i);
     }
     
     puts("");
@@ -443,20 +587,22 @@ void print_esymtbl32(Elf32_Shdr* shdr, char* name){
     printf("Number of entry : %d\n", shdr->sh_size / shdr->sh_entsize);
     puts("");
     //title of the table
+    space(6);
     printf("Value");
     space(6);
-    printf("Size  ");   
+    printf("Size ");   
     printf("Type");
-    space(4);
+    space(5);
     printf("Bind");
     space(3);
+    printf("Visibility ");
     printf("Index ");
     printf("Name");
     puts("");
     
     //print each shdr
     for(int i=0; i < shdr->sh_size / shdr->sh_entsize; i++){
-        //print_esym32(&sym[i]);
+        print_esym32(&sym[i], i);
     }
     
     puts("");
@@ -486,9 +632,10 @@ void print_ephdr32(Elf32_Phdr* phdr){
 /*
  * This function prints a 32 bits section header
  */
-void print_eshdr32(Elf32_Shdr* shdr){
+void print_eshdr32(Elf32_Shdr* shdr, int index){
     int printed;
     puts("");
+    printf("[%03d] ", index);
     printed = printf("%s", &STRTAB[shdr->sh_name]);
     space(20 - printed);
     printed = printf("%s", get_shtype(shdr->sh_type));
@@ -511,8 +658,33 @@ void print_eshdr32(Elf32_Shdr* shdr){
             
 }
 
+void print_esym32(Elf32_Sym* sym, int index){
+    int printed;
+    puts("");
+    printf("[%03d] ", index);
+    printf("0x%08x ", sym->st_value);
+    printed = printf("%4d ", sym->st_size);
+    printed = printf("%s", get_symtype64(sym->st_info));
+    space(9 - printed);
+    printed = printf("%s", get_symbind64(sym->st_info));
+    space(7 - printed);
+    printed = printf("%s", get_symvis64(sym->st_other));
+    space(10 - printed);
+    printed = printf("%6d ", sym->st_shndx);
+    printf("%s", &STRTAB[sym->st_name]);    
+    puts("");
+   
+}
+
 /*
- * Limits between 32 and 64 bits functions
+ *
+ *
+ ****************************************************************
+ * Limits between 32 and 64 bits functions                      *****************
+ ****************************************************************
+ *
+ *
+ *
  */
 
 /*
@@ -603,6 +775,7 @@ void print_eshtbl64(Elf64_Ehdr hdr){
     printf("Number of entry : %d\n", hdr.e_shnum);
     puts("");
     //title of the table
+    space(6);
     printf("Name");
     space(16);
     printf("Type");
@@ -626,7 +799,7 @@ void print_eshtbl64(Elf64_Ehdr hdr){
     
     //print each shdr
     for(int i=0; i < hdr.e_shnum; i++){
-        print_eshdr64(&shdr[i]);
+        print_eshdr64(&shdr[i], i);
     }
     
     puts("");
@@ -656,20 +829,22 @@ void print_esymtbl64(Elf64_Shdr* shdr, char* name){
     printf("Number of entry : %d\n", shdr->sh_size / shdr->sh_entsize);
     puts("");
     //title of the table
+    space(6);
     printf("Value");
     space(14);
-    printf("Size  ");   
+    printf("Size ");   
     printf("Type");
-    space(4);
+    space(5);
     printf("Bind");
     space(3);
+    printf("Visibility ");
     printf("Index ");
     printf("Name");
     puts("");
     
     //print each shdr
     for(int i=0; i < shdr->sh_size / shdr->sh_entsize; i++){
-        //print_esym64(&sym[i]);
+        print_esym64(&sym[i], i);
     }
     
     puts("");
@@ -700,9 +875,10 @@ void print_ephdr64(Elf64_Phdr* phdr){
 /*
  * This function prints a 64 bits section header
  */
-void print_eshdr64(Elf64_Shdr* shdr){
+void print_eshdr64(Elf64_Shdr* shdr, int index){
     int printed;
     puts("");
+    printf("[%03d] ", index);
     printed = printf("%s", &STRTAB[shdr->sh_name]);
     space(20 - printed);
     printed = printf("%s", get_shtype(shdr->sh_type));
@@ -724,6 +900,27 @@ void print_eshdr64(Elf64_Shdr* shdr){
         DYNSYM64 = shdr;
     
 }   
+
+/*
+ * This function prints a 64 bits symbol table index
+ */
+void print_esym64(Elf64_Sym* sym, int index){
+    int printed;
+    puts("");
+    printf("[%03d] ", index);
+    printf("0x%016x ", sym->st_value);
+    printed = printf("%4d ", sym->st_size);
+    printed = printf("%s", get_symtype64(sym->st_info));
+    space(9 - printed);
+    printed = printf("%s", get_symbind64(sym->st_info));
+    space(7 - printed);
+    printed = printf("%s", get_symvis64(sym->st_other));
+    space(10 - printed);
+    printed = printf("%6d ", sym->st_shndx);
+    printf("%s", &STRTAB[sym->st_name]);    
+    puts("");
+   
+}
 
 /*
  * This is the main function that will map the  
