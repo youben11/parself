@@ -14,37 +14,45 @@ char* SHSTRTAB; // addr of the section header string table
 char* STRTAB; // addr of the string table
 char* DYNSTR; //addr of the dynamic string table
 
-Elf32_Shdr* SYMTAB32;
-Elf32_Shdr* DYNSYM32;
+Elf32_Shdr* SYMTAB32; // the symbol table for ELF32
+Elf32_Shdr* DYNSYM32; // the dynamic symbol table for ELF32
 
-Elf64_Shdr* SYMTAB64;
-Elf64_Shdr* DYNSYM64;
+Elf64_Shdr* SYMTAB64; // the symbol table for ELF64
+Elf64_Shdr* DYNSYM64; // the dynamic symbol table for ELF64
 
-
+//Basic functions
 void usage(char* prog);
 void fatal(char* msg);
 int check_magic(char* ident);
 void space(int count);
 
-//Getters
+/*
+ * Getters
+ */
+//ELF header
 char* get_hdata(unsigned char data);
 char* get_hversion(unsigned char version);
 char* get_hosabi(unsigned char osabi);
 char* get_htype(unsigned short type);
 char* get_hmachine(unsigned short machine);
 
+//Program header
 char* get_phtype(unsigned int type);
 char* get_phflags(unsigned int flags);
 
+//Section header
 char* get_shtype(unsigned int type);
 char* get_shflags(unsigned int flags);
 
+//Symbol table
 char* get_symtype32(unsigned char info);
 char* get_symtype64(unsigned char info);
 char* get_symbind32(unsigned char info);
 char* get_symbind64(unsigned char info);
 char* get_symvis32(unsigned char other);
 char* get_symvis64(unsigned char other);
+
+
 
 //Elf32 functions
 void parse_elf32(Elf32_Ehdr hdr, FILE* elf);
